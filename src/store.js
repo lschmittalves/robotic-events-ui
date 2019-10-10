@@ -5,6 +5,7 @@ Vue.use(Vuex)
 
 function initialState () {
   return {
+    errorMessages: [],
     userIsLogged: false,
     currentUserInfo: {},
     currentEventInfo: {
@@ -34,7 +35,15 @@ export default new Vuex.Store({
     LOGIN: (state, person) => {
       state.currentUserInfo = person
       state.userIsLogged = true
+    },
+    ADD_ERROR: (state, errorMsg) => {
+      state.errorMessages.push(errorMsg)
+    },
+    CLEAR_ERRORS: (state) => {
+      state.errorMessages = []
     }
   },
-  actions: {}
+  actions: {
+
+  }
 })
