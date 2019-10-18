@@ -2,13 +2,13 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 
 // Store functionality
-import user from './user'
+import modules from './modules'
 
 Vue.use(Vuex)
 
 // Create a new store
 const store = new Vuex.Store({
-  user
+  modules
 })
 
 export default store
