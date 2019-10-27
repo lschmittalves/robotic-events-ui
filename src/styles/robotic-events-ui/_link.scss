@@ -1,0 +1,10 @@
+@import '~vuetify/src/styles/settings/colors';
+
+.v-application a.target-blank{
+    color: map-get($red, darken-4) !important;
+    text-decoration: none;
+}
+
+.v-application a.target-blank:hover{
+    color: map-get($red, lighten-2) !important;
+}

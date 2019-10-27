@@ -1,4 +1,4 @@
-function initialState () {
+export function initialState () {
   return {
     token: localStorage.getItem('token') || '',
     errorMessages: [],

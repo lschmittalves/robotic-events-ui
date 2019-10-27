@@ -1,64 +1,60 @@
 <template>
-  <v-toolbar id="core-toolbar" app flat prominent style="background: #eee;">
-    <div class="v-toolbar-title">
-      <v-toolbar-title class="tertiary--text font-weight-light">
-        <v-btn v-if="responsive" class="default v-btn--simple" dark icon @click.stop="onClickBtn">
-          <v-icon>mdi-view-list</v-icon>
-        </v-btn>
-        {{ title }}
-      </v-toolbar-title>
-    </div>
-    <v-spacer />
-    <v-toolbar-items>
-      <v-flex align-center layout py-2>
-        <router-link v-ripple class="toolbar-items" to="/user-profile">
-          <v-icon color="tertiary">mdi-account</v-icon>
-        </router-link>
-      </v-flex>
-    </v-toolbar-items>
-  </v-toolbar>
+  <div>
+    <v-toolbar color="red darken-4" :dark="isdark">
+      <v-toolbar-title>{{ title }}</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-toolbar-items>
+        <v-btn to="/" text>Dashboard</v-btn>
+        <v-btn text>Eventos</v-btn>
+        <v-btn text>Sua Equipe</v-btn>
+      </v-toolbar-items>
+      <v-btn icon to="/user-profile">
+        <v-icon>mdi-account</v-icon>
+      </v-btn>
+    </v-toolbar>
+  </div>
 </template>
 
 <script>
-import { mapMutations } from "vuex";
+import { mapMutations } from 'vuex'
 
 export default {
   data: () => ({
     title: null,
-    responsive: false
+    isdark: true
   }),
 
   watch: {
-    $route(val) {
-      this.title = val.name;
+    $route (val) {
+      this.title = val.name
     }
   },
 
-  mounted() {
-    this.onResponsiveInverted();
-    window.addEventListener("resize", this.onResponsiveInverted);
+  mounted () {
+    this.onResponsiveInverted()
+    window.addEventListener('resize', this.onResponsiveInverted)
   },
-  beforeDestroy() {
-    window.removeEventListener("resize", this.onResponsiveInverted);
+  beforeDestroy () {
+    window.removeEventListener('resize', this.onResponsiveInverted)
   },
 
   methods: {
-    ...mapMutations("app", ["setSidebar", "toggleSidebar"]),
-    onClickBtn() {
-      this.setDrawer(!this.$store.state.app.sidebar);
+    ...mapMutations('app', ['setSidebar', 'toggleSidebar']),
+    onClickBtn () {
+      this.setDrawer(!this.$store.state.app.sidebar)
     },
-    onClick() {
+    onClick () {
       //
     },
-    onResponsiveInverted() {
+    onResponsiveInverted () {
       if (window.innerWidth < 991) {
-        this.responsive = true;
+        this.responsive = true
       } else {
-        this.responsive = false;
+        this.responsive = false
       }
     }
   }
-};
+}
 </script>
 
 <style>

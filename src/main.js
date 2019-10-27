@@ -1,15 +1,12 @@
 import Vue from 'vue'
 
-// Components
-import './components'
-
 // Plugins
-import './plugins'
+import vuetify from './plugins/vuetify'
 import * as firebase from 'firebase'
 import { sync } from 'vuex-router-sync'
 
 // Application imports
-import App from '@/App.vue'
+import App from './App'
 import router from '@/router'
 import store from '@/store'
 
@@ -19,6 +16,7 @@ sync(store, router)
 Vue.config.productionTip = false
 
 new Vue({
+  vuetify,
   router,
   store,
   render: h => h(App)
