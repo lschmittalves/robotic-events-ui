@@ -26,7 +26,7 @@ export default {
 
   watch: {
     $route (val) {
-      this.title = val.name
+      this.title = 'Wickedbotz - ' + val.name
     }
   },
 

@@ -11,12 +11,12 @@ export default [
   },
   {
     path: '/user-register',
-    name: 'User Register',
+    name: 'Registro de Usuario',
     view: 'UserRegister'
   },
   {
     path: '/user-profile',
-    name: 'User Profile',
+    name: 'Seu Perfil',
     view: 'UserProfile'
   },
   {

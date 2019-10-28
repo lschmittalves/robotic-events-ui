@@ -1,7 +1,7 @@
 <template>
-  <v-container fill-height fluid grid-list-xl>
+  <v-container fluid>
     <v-layout wrap>
-      It Works!
+      Dashboard Works!
     </v-layout>
   </v-container>
 </template>

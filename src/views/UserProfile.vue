@@ -1,5 +1,7 @@
 <template>
-  <p>User profile Works!</p>
+  <v-container fluid>
+    <v-layout wrap>User profile Works!</v-layout>
+  </v-container>
 </template>
 
 <script>
