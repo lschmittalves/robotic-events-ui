@@ -3,47 +3,48 @@
     <v-row align="center" justify="center">
       <v-col cols="12" sm="8" md="4">
         <v-card class="elevation-12">
-          <v-toolbar color="primary" dark flat>
+          <v-toolbar flat>
             <v-toolbar-title>Cadastre-se</v-toolbar-title>
           </v-toolbar>
           <v-card-text>
-            <v-form>
+            <v-form v-model="valid">
               <v-text-field
                 label="Seu Email"
-                v-model="email"
+                v-model="userData.email"
                 type="email"
                 :rules="emailRules"
                 required
               ></v-text-field>
               <v-text-field
                 label="Senha"
-                v-model="password"
+                v-model="userData.password"
                 type="password"
+                hint="Uma letra, numero e um caracter especial"
                 :rules="pwdRules"
                 required
               ></v-text-field>
               <v-text-field
                 label="Confirme sua Senha"
-                v-model="passwordConfirmation"
+                v-model="userData.passwordConfirmation"
                 type="password"
-                hint="Uma letra, numero e um caracter especial"
                 :rules="pwdConfirmationRules"
                 required
               ></v-text-field>
               <v-text-field
                 label="Nome Completo"
-                v-model="fullName"
+                v-model="userData.fullName"
                 type="text"
                 :rules="nameRules"
                 required
               ></v-text-field>
               <v-text-field
                 label="Tel."
-                v-model="phone"
-                v-mask="phoneMask"
+                v-model="userData.phone"
+                v-mask="['(##) ####-####', '(##) #####-####']"
                 type="phone"
                 :rules="phoneRules"
-                hint="(##)########"
+                placeholder="(##)########"
+                hint="Somente numeros com o DDD"
                 required
               ></v-text-field>
               <v-menu
@@ -52,15 +53,20 @@
                 :close-on-content-click="false"
                 transition="scale-transition"
                 offset-y
-                full-width
                 min-width="290px"
               >
                 <template v-slot:activator="{ on }">
-                  <v-text-field v-model="birthDate" label="Data de Nasc." readonly v-on="on"></v-text-field>
+                  <v-text-field
+                    :value="birthDateRegionFormat"
+                    label="Data de Nasc."
+                    readonly
+                    v-on="on"
+                    :rules="birthDateRules"
+                  ></v-text-field>
                 </template>
                 <v-date-picker
                   ref="picker"
-                  v-model="birthDate"
+                  v-model="userData.birthDate"
                   :max="new Date().toISOString().substr(0, 10)"
                   min="1950-01-01"
                   @change="save"
@@ -68,9 +74,11 @@
               </v-menu>
             </v-form>
           </v-card-text>
+          <v-divider class="mt-12"></v-divider>
           <v-card-actions>
+            <v-btn color="primary" text to="/login">Cancelar</v-btn>
             <v-spacer></v-spacer>
-            <v-btn color="primary">Registrar</v-btn>
+            <v-btn :disabled="!valid" text>Registrar</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -80,21 +88,23 @@
 
 <script>
 import { mask } from 'vue-the-mask'
+import moment from 'moment'
 
 export default {
   directives: {
     mask
   },
   data: () => ({
+    userData: {
+      email: '',
+      password: '',
+      passwordConfirmation: '',
+      fullName: '',
+      birthDate: '',
+      phone: ''
+    },
     valid: false,
     birthDateMenu: false,
-    email: '',
-    password: '',
-    passwordConfirmation: '',
-    fullName: '',
-    birthDate: '',
-    phone: '',
-    phoneMask: '(##)########',
     emailRules: [
       v => !!v || 'Informe seu E-mail',
       v => /.+@.+/.test(v) || 'Informe um e-mail valido'
@@ -105,19 +115,30 @@ export default {
         /^(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/.test(v) ||
         'Deve conter uma letra, numero e um caracter especial'
     ],
-    pwdConfirmationRules: [
-      v =>
-        v === this.password ||
-        'Deve ser igual a senha informada no campo anterior'
-    ],
+    nameRules: [v => !!v || 'Informe seu nome completo'],
     phoneRules: [
       v => !!v || 'Informe seu telefone',
       v =>
-        /(([1-9][0-9])?|[1-9][0-9])s?([9]{1})?([0-9]{4})-?([0-9]{4})$'/.test(
+        /(([1-9][0-9])?|[1-9][0-9])s?([9]{1})?([0-9]{4})-?([0-9]{4})$/.test(
           v
         ) || 'Informe um telefone valido'
-    ]
+    ],
+    birthDateRules: [v => !!v || 'Informe sua data de nascimento']
   }),
+  computed: {
+    pwdConfirmationRules () {
+      const rules = []
+      const rule = v =>
+        (!!v && v) === this.userData.password ||
+        'Deve ser igual a senha informada no campo anterior'
+
+      rules.push(rule)
+      return rules
+    },
+    birthDateRegionFormat () {
+      return this.userData.birthDate ? moment(this.userData.birthDate).format('DD/MM/YYYY') : ''
+    }
+  },
   watch: {
     birthDateMenu (val) {
       val && setTimeout(() => (this.$refs.picker.activePicker = 'YEAR'))

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-toolbar color="red darken-4" :dark="isdark">
+    <v-toolbar>
       <v-toolbar-title>{{ title }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items>
@@ -20,13 +20,12 @@ import { mapMutations } from 'vuex'
 
 export default {
   data: () => ({
-    title: null,
-    isdark: true
+    title: null
   }),
 
   watch: {
     $route (val) {
-      this.title = 'Wickedbotz - ' + val.name
+      this.title = val.name
     }
   },
 

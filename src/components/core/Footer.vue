@@ -1,5 +1,5 @@
 <template>
-  <v-footer absolute height="82">
+  <v-footer absolute height="50">
     <div>
     </div>
     <v-spacer />

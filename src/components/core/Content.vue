@@ -14,7 +14,7 @@ export default {
   },
   metaInfo () {
     return {
-      title: 'Catolica SC -  Wickedbotz'
+      title: 'Summit de Robotica'
     }
   }
 }

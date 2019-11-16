@@ -10,6 +10,11 @@ export default [
     view: 'Login'
   },
   {
+    path: '/signup',
+    name: 'Summit de Robotica',
+    view: 'SignUp'
+  },
+  {
     path: '/user-register',
     name: 'Registro de Usuario',
     view: 'UserRegister'
