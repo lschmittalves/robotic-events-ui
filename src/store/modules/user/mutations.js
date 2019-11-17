@@ -8,7 +8,7 @@ export default {
     })
   },
   LOGIN_SUCESS: (state, payload) => {
-    state.currentGoogleUserInfo = payload
+    state.currentFirebaseUserInfo = payload
     state.userIsLogged = true
   },
   ADD_ERROR: (state, payload) => {

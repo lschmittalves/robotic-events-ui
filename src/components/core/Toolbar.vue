@@ -1,14 +1,14 @@
 <template>
   <div>
     <v-toolbar>
-      <v-toolbar-title>{{ title }}</v-toolbar-title>
+      <v-toolbar-title>Summit de Robotica{{ title }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items>
-        <v-btn to="/" text>Dashboard</v-btn>
-        <v-btn text>Eventos</v-btn>
-        <v-btn text>Sua Equipe</v-btn>
+        <v-btn :visible="isAuthenticate" to="/" text>Dashboard</v-btn>
+        <v-btn :visible="isAuthenticate" text>Eventos</v-btn>
+        <v-btn :visible="isAuthenticate" text>Sua Equipe</v-btn>
       </v-toolbar-items>
-      <v-btn icon to="/user-profile">
+      <v-btn :visible="isAuthenticate" icon to="/user-profile">
         <v-icon>mdi-account</v-icon>
       </v-btn>
     </v-toolbar>
@@ -25,7 +25,11 @@ export default {
 
   watch: {
     $route (val) {
-      this.title = val.name
+      if (val.path.includes('login') || val.path.includes('signup')) {
+        this.title = ''
+      } else {
+        this.title = ' - ' + val.name
+      }
     }
   },
 
@@ -36,7 +40,11 @@ export default {
   beforeDestroy () {
     window.removeEventListener('resize', this.onResponsiveInverted)
   },
-
+  computed: {
+    isAuthenticate () {
+      return !this.$store.getters.isAuthenticated
+    }
+  },
   methods: {
     ...mapMutations('app', ['setSidebar', 'toggleSidebar']),
     onClickBtn () {

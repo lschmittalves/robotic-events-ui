@@ -3,7 +3,7 @@ export function initialState () {
     token: localStorage.getItem('token') || '',
     errorMessages: [],
     userIsLogged: false,
-    currentGoogleUserInfo: {},
+    currentFirebaseUserInfo: {},
     currentPersonInfo: {}
   }
 }

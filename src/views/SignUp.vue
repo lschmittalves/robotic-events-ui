@@ -7,12 +7,19 @@
             <v-toolbar-title>Cadastre-se</v-toolbar-title>
           </v-toolbar>
           <v-card-text>
-            <v-form v-model="valid">
+            <v-form ref="sigupForm" v-model="valid">
               <v-text-field
                 label="Seu Email"
                 v-model="userData.email"
                 type="email"
                 :rules="emailRules"
+                required
+              ></v-text-field>
+              <v-text-field
+                label="Confirme Seu Email"
+                v-model="userData.emailConfirmation"
+                type="email"
+                :rules="emailConfirmationRules"
                 required
               ></v-text-field>
               <v-text-field
@@ -78,7 +85,7 @@
           <v-card-actions>
             <v-btn color="primary" text to="/login">Cancelar</v-btn>
             <v-spacer></v-spacer>
-            <v-btn :disabled="!valid" text>Registrar</v-btn>
+            <v-btn :disabled="!valid" @click="submit" text>Registrar</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -126,17 +133,26 @@ export default {
     birthDateRules: [v => !!v || 'Informe sua data de nascimento']
   }),
   computed: {
+    emailConfirmationRules () {
+      const rules = []
+      const rule = v =>
+        (!!v && v) === this.userData.email ||
+        'Deve ser igual ao email informada no campo anterior'
+      rules.push(rule)
+      return rules
+    },
     pwdConfirmationRules () {
       const rules = []
       const rule = v =>
         (!!v && v) === this.userData.password ||
         'Deve ser igual a senha informada no campo anterior'
-
       rules.push(rule)
       return rules
     },
     birthDateRegionFormat () {
-      return this.userData.birthDate ? moment(this.userData.birthDate).format('DD/MM/YYYY') : ''
+      return this.userData.birthDate
+        ? moment(this.userData.birthDate).format('DD/MM/YYYY')
+        : ''
     }
   },
   watch: {
@@ -147,6 +163,14 @@ export default {
   methods: {
     save (date) {
       this.$refs.birthDateMenu.save(date)
+    },
+    submit () {
+      if (this.$refs.sigupForm.validate()) {
+        this.$store.dispatch('userSignUp', {
+          email: this.userData.email,
+          password: this.userData.password
+        })
+      }
     }
   }
 }
