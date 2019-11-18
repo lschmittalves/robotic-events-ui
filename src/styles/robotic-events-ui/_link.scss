@@ -8,3 +8,12 @@
 .v-application a.target-blank:hover{
     color: map-get($grey, darken-1) !important;
 }
+
+.v-application a.router-link{
+    text-decoration: none;
+}
+
+.v-application a.router-link:hover{
+    text-decoration: none;
+    color: map-get($grey, darken-3) !important;
+}

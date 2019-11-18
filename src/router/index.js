@@ -55,7 +55,7 @@ router.beforeEach((to, from, next) => {
     next()
     return
   }
-  if (to.path.includes('login')) {
+  if (to.path.includes('login') || to.path.includes('signup')) {
     next()
   } else {
     next('/login')

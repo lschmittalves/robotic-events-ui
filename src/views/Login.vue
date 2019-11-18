@@ -4,38 +4,55 @@
       <v-col cols="12" sm="8" md="4">
         <v-card class="elevation-12">
           <v-card-text>
-            <p class="display-1 text-center">Login</p>
-
-            <v-form ref="sigupForm" v-model="valid">
-              <v-text-field
-                prepend-icon="mdi-account"
-                label="Email"
-                v-model="userData.email"
-                type="email"
-                :rules="emailRules"
-                placeholder="Informe seu email"
-                required
-              ></v-text-field>
-              <v-text-field
-                prepend-icon="mdi-key"
-                :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                :type="showPassword ? 'text' : 'password'"
-                class="input-group--focused"
-                @click:append="showPassword = !showPassword"
-                label="Senha"
-                v-model="userData.password"
-                :rules="pwdRules"
-                placeholder="Informe sua senha"
-                required
-              ></v-text-field>
-            </v-form>
-            <v-btn :disabled="!valid" @click="submit" x-large block outlined>Entrar</v-btn>
+            <p class="display-1 text-center ma-5">Login</p>
+            <v-row align="start" justify="center">
+              <v-col cols="12" md="10">
+                <v-form ref="sigupForm" v-model="valid">
+                  <v-text-field
+                    prepend-icon="mdi-account"
+                    label="Email"
+                    v-model="userData.email"
+                    type="email"
+                    :rules="emailRules"
+                    placeholder="Informe seu email"
+                    required
+                  ></v-text-field>
+                  <v-text-field
+                    prepend-icon="mdi-key"
+                    :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                    :type="showPassword ? 'text' : 'password'"
+                    class="input-group--focused"
+                    @click:append="showPassword = !showPassword"
+                    label="Senha"
+                    v-model="userData.password"
+                    :rules="pwdRules"
+                    placeholder="Informe sua senha"
+                    required
+                  ></v-text-field>
+                </v-form>
+                <p class="text-right">
+                  <a class="router-link">Esqueceu a senha?</a>
+                </p>
+              </v-col>
+              <v-col class="mt-n6" cols="12" md="10">
+                <v-btn :disabled="!valid" @click="submit" x-large block outlined>Entrar</v-btn>
+              </v-col>
+              <v-col class="mt-n2 pa-12" cols="12" md="10">
+                <p class="ma-2 text-center">Ou faca o login usando</p>
+                <v-row align="start" justify="center">
+                  <v-btn class="mx-2" fab dark color="yellow darken-2" depressed @click="googleLogin">
+                    <v-icon dark>mdi-google</v-icon>
+                  </v-btn>
+                </v-row>
+              </v-col>
+              <v-col cols="12" md="10">
+                <p class="ma-2 text-center">Ainda nao possui acesso?</p>
+                <v-row align="start" justify="center">
+                  <v-btn color="primary" text to="/signup">Registrar-se</v-btn>
+                </v-row>
+              </v-col>
+            </v-row>
           </v-card-text>
-          <v-divider class="mt-12"></v-divider>
-          <v-card-actions>
-            <v-btn color="primary" text to="/signup">Registrar-se</v-btn>
-            <v-spacer></v-spacer>
-          </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
@@ -58,6 +75,8 @@ export default {
     pwdRules: [v => !!v || 'Informe a senha para acessar sua conta']
   }),
   methods: {
+    googleLogin () {
+    },
     submit () {
       if (this.$refs.sigupForm.validate()) {
         this.$store.dispatch('userLogin', {
