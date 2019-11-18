@@ -175,7 +175,7 @@ export default {
     },
     submit () {
       if (this.$refs.sigupForm.validate()) {
-        this.$store.dispatch('userSignUp', {
+        this.$store.dispatch('user/userSignUp', {
           email: this.userData.email,
           password: this.userData.password
         })

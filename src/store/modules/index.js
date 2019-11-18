@@ -1,22 +1,25 @@
-// https://vuex.vuejs.org/en/modules.html
-
-const requireModule = require.context('.', true, /\.js$/)
+import camelCase from 'lodash/camelCase'
+// Storing in variable a context with all files in this folder
+// ending with `.js`.
+const requireModule = require.context('.', false, /\.js$/)
 const modules = {}
 
 requireModule.keys().forEach(fileName => {
   if (fileName === './index.js') return
-
-  // Replace ./ and .js
-  const path = fileName.replace(/(\.\/|\.js)/g, '')
-  const [moduleName, imported] = path.split('/')
-
-  if (!modules[moduleName]) {
-    modules[moduleName] = {
-      namespaced: true
-    }
+  // filter fullstops and extension
+  // and return a camel-case name for the file
+  const moduleName = camelCase(
+    fileName.replace(/(\.\/|\.js)/g, '')
+  )
+  // create a dynamic object with all modules
+  modules[moduleName] = {
+    // add namespace here
+    namespaced: true,
+    ...requireModule(fileName).default
+    // if you have exported the object with name in the module `js` file
+    // e.g., export const name = {};
+    // uncomment this line and comment the above
+    // ...requireModule(fileName)[moduleName]
   }
-
-  modules[moduleName][imported] = requireModule(fileName).default
 })
-
 export default modules

@@ -4,11 +4,11 @@
       <v-toolbar-title>Summit de Robotica{{ title }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items>
-        <v-btn :visible="isAuthenticate" to="/" text>Dashboard</v-btn>
-        <v-btn :visible="isAuthenticate" text>Eventos</v-btn>
-        <v-btn :visible="isAuthenticate" text>Sua Equipe</v-btn>
+        <v-btn v-if="displayLinks" to="/" text>Dashboard</v-btn>
+        <v-btn v-if="displayLinks" text>Eventos</v-btn>
+        <v-btn v-if="displayLinks" text>Sua Equipe</v-btn>
       </v-toolbar-items>
-      <v-btn :visible="isAuthenticate" icon to="/user-profile">
+      <v-btn v-if="displayLinks" icon to="/user-profile">
         <v-icon>mdi-account</v-icon>
       </v-btn>
     </v-toolbar>
@@ -41,8 +41,8 @@ export default {
     window.removeEventListener('resize', this.onResponsiveInverted)
   },
   computed: {
-    isAuthenticate () {
-      return !this.$store.getters.isAuthenticated
+    displayLinks: function () {
+      return this.$store.getters.isAuthenticated
     }
   },
   methods: {
