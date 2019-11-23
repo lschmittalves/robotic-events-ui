@@ -1,15 +1,5 @@
 import firebase from 'firebase'
 import router from '@/router'
-import {
-  createHelpers
-} from 'vuex-map-fields'
-const {
-  getUserField,
-  updateUserField
-} = createHelpers({
-  getterType: 'getUserField',
-  mutationType: 'updateUserField'
-})
 
 const userColRef = firebase.firestore().collection('users')
 
@@ -36,8 +26,7 @@ export default {
     },
     userRegisterIsCompleted: state => {
       return state.userIsRegistered
-    },
-    getUserField
+    }
   },
   mutations: {
     loggout: state => {
@@ -63,7 +52,18 @@ export default {
     clearError: (state) => {
       state.errorMessages = []
     },
-    updateUserField
+    updateEmail: (state, payload) => {
+      state.currentUser.email = payload
+    },
+    updateFullName: (state, payload) => {
+      state.currentUser.fullName = payload
+    },
+    updateBirthDate: (state, payload) => {
+      state.currentUser.birthDate = payload
+    },
+    updatePhone: (state, payload) => {
+      state.currentUser.phone = payload
+    }
   },
   actions: {
     userLogin ({
@@ -137,7 +137,7 @@ export default {
         if (doc.exists) {
           commit('updateCurrentUser', doc.data())
         } else {
-          router.push('/sigup')
+          router.push('/signup')
         }
       }).catch((error) => {
         console.log('Error getting document:', error)

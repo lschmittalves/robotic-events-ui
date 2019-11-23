@@ -14,52 +14,53 @@
                 <v-form ref="sigupForm" v-model="valid">
                   <v-text-field
                     label="Seu Email"
-                    v-model="userData.email"
+                    v-model="email"
                     type="email"
                     :rules="emailRules"
                     required
-                    :readonly="userIsAuthenticated"
+                    :disabled="userIsAuthenticated"
                   ></v-text-field>
                   <v-text-field
+                    v-if="!userIsAuthenticated"
                     label="Confirme Seu Email"
-                    v-model="userData.emailConfirmation"
+                    v-model="emailConfirmation"
                     type="email"
                     :rules="emailConfirmationRules"
                     required
                   ></v-text-field>
                   <v-text-field
-                    v-if="userIsAuthenticated"
+                    v-if="!userIsAuthenticated"
                     :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                     :type="showPassword ? 'text' : 'password'"
                     class="input-group--focused"
                     @click:append="showPassword = !showPassword"
                     label="Senha"
-                    v-model="userData.password"
+                    v-model="password"
                     hint="Uma letra, numero e um caracter especial"
                     :rules="pwdRules"
                     required
                   ></v-text-field>
                   <v-text-field
-                    v-if="userIsAuthenticated"
+                    v-if="!userIsAuthenticated"
                     :append-icon="showPasswordConfirmation ? 'mdi-eye' : 'mdi-eye-off'"
                     :type="showPasswordConfirmation ? 'text' : 'password'"
                     class="input-group--focused"
                     @click:append="showPasswordConfirmation = !showPasswordConfirmation"
                     label="Confirme sua Senha"
-                    v-model="userData.passwordConfirmation"
+                    v-model="passwordConfirmation"
                     :rules="pwdConfirmationRules"
                     required
                   ></v-text-field>
                   <v-text-field
                     label="Nome Completo"
-                    v-model="userData.fullName"
+                    v-model="fullName"
                     type="text"
                     :rules="nameRules"
                     required
                   ></v-text-field>
                   <v-text-field
                     label="Telefone"
-                    v-model="userData.phone"
+                    v-model="phone"
                     v-mask="['(##) ####-####', '(##) #####-####']"
                     type="phone"
                     :rules="phoneRules"
@@ -85,7 +86,7 @@
                     </template>
                     <v-date-picker
                       ref="picker"
-                      v-model="userData.birthDate"
+                      v-model="birthDate"
                       :max="new Date().toISOString().substr(0, 10)"
                       min="1950-01-01"
                       @change="save"
@@ -110,24 +111,15 @@
 <script>
 import { mask } from 'vue-the-mask'
 import moment from 'moment'
-import { createHelpers } from 'vuex-map-fields'
-
-// We're using the same getter and mutation types
-// as we've used in the store above.
-const { mapFields } = createHelpers({
-  getterType: 'getUserField',
-  mutationType: 'updateUserField'
-})
 
 export default {
   directives: {
     mask
   },
   data: () => ({
-    userData: {
-      password: '',
-      passwordConfirmation: ''
-    },
+    password: '',
+    passwordConfirmation: '',
+    emailConfirmation: '',
     valid: false,
     birthDateMenu: false,
     showPassword: false,
@@ -147,18 +139,43 @@ export default {
     birthDateRules: [v => !!v || 'Informe sua data de nascimento']
   }),
   computed: {
-    ...mapFields({
-      userData: {
-        email: 'currentUser.email',
-        fullName: 'currentUser.fullName',
-        birthDate: 'currentUser.birthDate',
-        phone: 'currentUser.phone'
+    email: {
+      get () {
+        return this.$store.state['user'].currentUser.email
+      },
+      set (value) {
+        this.$store.commit('user/updateEmail', value)
       }
-    }),
+    },
+    fullName: {
+      get () {
+        return this.$store.state['user'].currentUser.fullName
+      },
+      set (value) {
+        this.$store.commit('user/updateFullName', value)
+      }
+    },
+    birthDate: {
+      get () {
+        return this.$store.state['user'].currentUser.birthDate
+      },
+      set (value) {
+        this.$store.commit('user/updateBirthDate', value)
+      }
+    },
+    phone: {
+      get () {
+        return this.$store.state['user'].currentUser.phone
+      },
+      set (value) {
+        this.$store.commit('user/updatePhone', value)
+      }
+    },
     emailConfirmationRules () {
       const rules = []
       const rule = v =>
-        (!!v && v) === this.userData.email ||
+        this.userIsAuthenticated ||
+        (!!v && v) === this.email ||
         'Deve ser igual ao email informada no campo anterior'
       rules.push(rule)
       return rules
@@ -180,14 +197,14 @@ export default {
       const rules = []
       const rule = v =>
         this.userIsAuthenticated ||
-        (!!v && v) === this.userData.password ||
+        (!!v && v) === this.password ||
         'Deve ser igual a senha informada no campo anterior'
       rules.push(rule)
       return rules
     },
     birthDateRegionFormat () {
-      return this.userData.birthDate
-        ? moment(this.userData.birthDate).format('DD/MM/YYYY')
+      return this.birthDate
+        ? moment(this.birthDate).format('DD/MM/YYYY')
         : ''
     },
     userIsAuthenticated: function () {
@@ -206,8 +223,8 @@ export default {
     submit () {
       if (this.$refs.sigupForm.validate()) {
         this.$store.dispatch('user/userSignUp', {
-          email: this.userData.email,
-          password: this.userData.password
+          email: this.email,
+          password: this.password
         })
       }
     }
