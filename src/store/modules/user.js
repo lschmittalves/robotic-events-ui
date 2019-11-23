@@ -1,13 +1,30 @@
 import firebase from 'firebase'
 import router from '@/router'
+import {
+  createHelpers
+} from 'vuex-map-fields'
+const {
+  getUserField,
+  updateUserField
+} = createHelpers({
+  getterType: 'getUserField',
+  mutationType: 'updateUserField'
+})
+
+const userColRef = firebase.firestore().collection('users')
 
 export function initialState () {
   return {
     token: localStorage.getItem('token') || '',
     errorMessages: [],
     userIsLogged: false,
-    currentFirebaseUserInfo: {},
-    currentPersonInfo: {}
+    userIsRegistered: false,
+    currentUser: {
+      email: '',
+      fullName: '',
+      birthDate: '',
+      phone: ''
+    }
   }
 }
 
@@ -16,75 +33,116 @@ export default {
   getters: {
     isAuthenticated: state => {
       return state.userIsLogged
-    }
+    },
+    userRegisterIsCompleted: state => {
+      return state.userIsRegistered
+    },
+    getUserField
   },
   mutations: {
-    LOGGOUT: state => {
+    loggout: state => {
       const s = initialState()
       Object.keys(s).forEach(key => {
         state[key] = s[key]
       })
     },
-    LOGIN_SUCESS: (state, payload) => {
-      state.currentFirebaseUserInfo = payload
+    loginSucess: (state, payload) => {
+      state.currentUser.email = payload
       state.userIsLogged = true
     },
-    ADD_ERROR: (state, payload) => {
+    updateCurrentUser: (state, payload) => {
+      state.currentUser = payload
+      state.userIsRegistered = true
+    },
+    updateUserRegistered: (state, payload) => {
+      state.userIsRegistered = payload
+    },
+    addError: (state, payload) => {
       state.errorMessages.push(payload)
     },
-    CLEAR_ERRORS: (state) => {
+    clearError: (state) => {
       state.errorMessages = []
-    }
+    },
+    updateUserField
   },
   actions: {
     userLogin ({
+      dispatch,
       commit
     }, {
       email,
       password
     }) {
-      firebase
+      return firebase
         .auth()
         .signInWithEmailAndPassword(email, password)
-        .then(user => {
-          commit('LOGIN_SUCESS', user)
-          router.push('/')
-        })
-        .catch(() => {
-          commit('LOGGOUT', null)
-        })
+        .then((userInfo) => commit('loginSucess', userInfo.user.email))
+        .then(() => dispatch('updateCurrentUser'))
+        .catch(() => commit('loggout'))
     },
     userSignUp ({
-      commit
+      dispatch,
+      commit,
+      state
     }, {
       email,
       password
     }) {
-      firebase
-        .auth()
-        .createUserWithEmailAndPassword(email, password)
-        .then(user => {
-          commit('LOGIN_SUCESS', user)
-          router.push('/')
-        })
-        .catch(() => {
-          commit('LOGGOUT')
-        })
+      if (state.userIsLogged) {
+        return dispatch('userInsert')
+      } else {
+        return firebase
+          .auth()
+          .createUserWithEmailAndPassword(email, password)
+          .then(() => commit('loginSucess', true))
+          .then(() => dispatch('userInsert'))
+          .then(() => router.push('/'))
+          .catch(() => {
+            commit('loggout')
+          })
+      }
     },
     userSignOut ({
       commit
     }) {
-      firebase
+      return firebase
         .auth()
         .signOut()
         .then(() => {
-          commit('LOGGOUT')
+          commit('loggout')
           router.push('/login')
         })
         .catch(() => {
-          commit('LOGGOUT')
+          commit('loggout')
           router.push('/login')
         })
+    },
+    userInsert ({
+      commit,
+      state
+    }) {
+      return userColRef
+        .doc(firebase.auth().currentUser.uid)
+        .set(state.currentUser).then(() => commit('updateUserRegistered', true))
+        .then(() => router.push('/'))
+        .catch((error) => {
+          console.log('Error getting document:', error)
+        })
+    },
+    updateCurrentUser ({
+      commit
+    }) {
+      var docRef = userColRef.doc(firebase.auth().currentUser.uid)
+      return docRef.get().then((doc) => {
+        if (doc.exists) {
+          commit('updateCurrentUser', doc.data())
+        } else {
+          router.push('/sigup')
+        }
+      }).catch((error) => {
+        console.log('Error getting document:', error)
+      })
     }
+
   }
 }

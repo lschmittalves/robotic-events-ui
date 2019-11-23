@@ -42,7 +42,7 @@ export default {
   },
   computed: {
     displayLinks: function () {
-      return this.$store.getters.isAuthenticated
+      return this.$store.getters['user/isAuthenticated']
     }
   },
   methods: {

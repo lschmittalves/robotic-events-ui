@@ -79,7 +79,7 @@ export default {
     },
     submit () {
       if (this.$refs.sigupForm.validate()) {
-        this.$store.dispatch('userLogin', {
+        this.$store.dispatch('user/userLogin', {
           email: this.userData.email,
           password: this.userData.password
         })

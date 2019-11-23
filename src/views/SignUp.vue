@@ -5,6 +5,10 @@
         <v-card class="elevation-12">
           <v-card-text>
             <p class="display-1 text-center ma-5">Seja Bem Vindo!</p>
+            <p
+              v-if="userIsAuthenticated"
+              class="subtitle-1 text-center ma-5"
+            >Por favor complete seu cadastro</p>
             <v-row align="start" justify="center">
               <v-col cols="12" md="10">
                 <v-form ref="sigupForm" v-model="valid">
@@ -14,6 +18,7 @@
                     type="email"
                     :rules="emailRules"
                     required
+                    :readonly="userIsAuthenticated"
                   ></v-text-field>
                   <v-text-field
                     label="Confirme Seu Email"
@@ -23,6 +28,7 @@
                     required
                   ></v-text-field>
                   <v-text-field
+                    v-if="userIsAuthenticated"
                     :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                     :type="showPassword ? 'text' : 'password'"
                     class="input-group--focused"
@@ -34,6 +40,7 @@
                     required
                   ></v-text-field>
                   <v-text-field
+                    v-if="userIsAuthenticated"
                     :append-icon="showPasswordConfirmation ? 'mdi-eye' : 'mdi-eye-off'"
                     :type="showPasswordConfirmation ? 'text' : 'password'"
                     class="input-group--focused"
@@ -103,6 +110,14 @@
 <script>
 import { mask } from 'vue-the-mask'
 import moment from 'moment'
+import { createHelpers } from 'vuex-map-fields'
+
+// We're using the same getter and mutation types
+// as we've used in the store above.
+const { mapFields } = createHelpers({
+  getterType: 'getUserField',
+  mutationType: 'updateUserField'
+})
 
 export default {
   directives: {
@@ -110,12 +125,8 @@ export default {
   },
   data: () => ({
     userData: {
-      email: '',
       password: '',
-      passwordConfirmation: '',
-      fullName: '',
-      birthDate: '',
-      phone: ''
+      passwordConfirmation: ''
     },
     valid: false,
     birthDateMenu: false,
@@ -124,12 +135,6 @@ export default {
     emailRules: [
       v => !!v || 'Informe seu E-mail',
       v => /.+@.+/.test(v) || 'Informe um e-mail valido'
-    ],
-    pwdRules: [
-      v => !!v || 'Informe uma senha pra sua conta',
-      v =>
-        /^(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/.test(v) ||
-        'Deve conter uma letra, numero e um caracter especial'
     ],
     nameRules: [v => !!v || 'Informe seu nome completo'],
     phoneRules: [
@@ -142,6 +147,14 @@ export default {
     birthDateRules: [v => !!v || 'Informe sua data de nascimento']
   }),
   computed: {
+    ...mapFields({
+      userData: {
+        email: 'currentUser.email',
+        fullName: 'currentUser.fullName',
+        birthDate: 'currentUser.birthDate',
+        phone: 'currentUser.phone'
+      }
+    }),
     emailConfirmationRules () {
       const rules = []
       const rule = v =>
@@ -150,9 +163,23 @@ export default {
       rules.push(rule)
       return rules
     },
+    pwdRules () {
+      const rules = []
+      const rule1 = v =>
+        this.userIsAuthenticated || !!v || 'Informe uma senha pra sua conta'
+      const rule2 = v =>
+        this.userIsAuthenticated ||
+        /^(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/.test(v) ||
+        'Deve conter uma letra, numero e um caracter especial'
+
+      rules.push(rule1)
+      rules.push(rule2)
+      return rules
+    },
     pwdConfirmationRules () {
       const rules = []
       const rule = v =>
+        this.userIsAuthenticated ||
         (!!v && v) === this.userData.password ||
         'Deve ser igual a senha informada no campo anterior'
       rules.push(rule)
@@ -162,6 +189,9 @@ export default {
       return this.userData.birthDate
         ? moment(this.userData.birthDate).format('DD/MM/YYYY')
         : ''
+    },
+    userIsAuthenticated: function () {
+      return this.$store.getters['user/isAuthenticated']
     }
   },
   watch: {
