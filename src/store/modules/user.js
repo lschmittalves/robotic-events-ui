@@ -1,5 +1,8 @@
 import firebase from 'firebase'
 import router from '@/router'
+import {
+  messages
+} from '../../utils/messages'
 
 const userColRef = firebase.firestore().collection('users')
 
@@ -58,14 +61,19 @@ export default {
     }
   },
   actions: {
-    userLogin ({ commit }, {
+    userLogin ({
+      dispatch
+    }, {
       email,
       password
     }) {
       return firebase
         .auth()
         .signInWithEmailAndPassword(email, password)
-        .catch((error) => console.log(error))
+        .catch((error) => this.dispatch('general/reportError', {
+          userMessage: messages[error.code],
+          errorObj: error
+        }))
     },
     userLogInSucess ({
       dispatch,
@@ -83,7 +91,10 @@ export default {
             router.push('/')
           }
         })
-        .catch((error) => console.log(error))
+        .catch((error) => this.dispatch('general/reportError', {
+          userMessage: messages[error.code],
+          errorObj: error
+        }))
     },
     userSignUp ({
       dispatch,
@@ -99,17 +110,21 @@ export default {
         return firebase
           .auth()
           .createUserWithEmailAndPassword(email, password)
-          .then(() => commit('loginSucess', true))
           .then(() => dispatch('userInsert'))
-          .then(() => router.push('/'))
-          .catch((error) => console.log(error))
+          .catch((error) => this.dispatch('general/reportError', {
+            userMessage: messages[error.code],
+            errorObj: error
+          }))
       }
     },
     userSignOut () {
       return firebase
         .auth()
         .signOut()
-        .catch((error) => console.log(error))
+        .catch((error) => this.dispatch('general/reportError', {
+          userMessage: messages[error.code],
+          errorObj: error
+        }))
     },
     userSignOutSucess ({
       commit
@@ -120,19 +135,28 @@ export default {
       }
     },
     userInsert ({
+      dispatch,
       state
     }) {
       return userColRef
         .doc(firebase.auth().currentUser.uid)
         .set(state.currentUser)
-        .catch((error) => console.log(error))
+        .catch((error) => this.dispatch('general/reportError', {
+          userMessage: messages[error.code],
+          errorObj: error
+        }))
     },
-    getCurrentUserFromFirestore () {
+    getCurrentUserFromFirestore ({
+      dispatch
+    }) {
       return userColRef
         .doc(firebase.auth().currentUser.uid)
         .get()
         .then((doc) => doc.exists ? Promise.resolve(doc.data()) : Promise.resolve(null))
-        .catch((error) => console.log(error))
+        .catch((error) => this.dispatch('general/reportError', {
+          userMessage: messages[error.code],
+          errorObj: error
+        }))
     }
 
   }

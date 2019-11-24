@@ -1,4 +1,3 @@
-
 export function initialState () {
   return {
     currentErrorMessage: ''
@@ -23,15 +22,24 @@ export default {
   actions: {
     reportErrorMessage ({
       commit
-    }, {
-      errorMessage
-    }) {
-      commit('setErrorMessage', errorMessage)
+    }, errorMessage) {
+      commit('setErrorMessage', errorMessage || 'Erro nao mapeado, reporte ao administrador do sistema!')
     },
     clearErrorMessage ({
       commit
     }) {
       commit('setErrorMessage', '')
+    },
+    reportError ({
+      dispatch
+    }, {
+      userMessage,
+      errorObj
+    }) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error(errorObj)
+      }
+      dispatch('reportErrorMessage', userMessage)
     }
   }
 }
