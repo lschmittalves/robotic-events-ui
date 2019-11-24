@@ -5,8 +5,6 @@ const userColRef = firebase.firestore().collection('users')
 
 export function initialState () {
   return {
-    token: localStorage.getItem('token') || '',
-    errorMessages: [],
     userIsLogged: false,
     userIsRegistered: false,
     currentUser: {
@@ -26,6 +24,9 @@ export default {
     },
     userRegisterIsCompleted: state => {
       return state.userIsRegistered
+    },
+    getUserName: state => {
+      return state.currentUser.fullName
     }
   },
   mutations: {
@@ -43,15 +44,6 @@ export default {
       state.currentUser = payload
       state.userIsRegistered = true
     },
-    updateUserRegistered: (state, payload) => {
-      state.userIsRegistered = payload
-    },
-    addError: (state, payload) => {
-      state.errorMessages.push(payload)
-    },
-    clearError: (state) => {
-      state.errorMessages = []
-    },
     updateEmail: (state, payload) => {
       state.currentUser.email = payload
     },
@@ -66,19 +58,32 @@ export default {
     }
   },
   actions: {
-    userLogin ({
-      dispatch,
-      commit
-    }, {
+    userLogin ({ commit }, {
       email,
       password
     }) {
       return firebase
         .auth()
         .signInWithEmailAndPassword(email, password)
-        .then((userInfo) => commit('loginSucess', userInfo.user.email))
-        .then(() => dispatch('updateCurrentUser'))
-        .catch(() => commit('loggout'))
+        .catch((error) => console.log(error))
+    },
+    userLogInSucess ({
+      dispatch,
+      commit
+    }, {
+      email
+    }) {
+      commit('loginSucess', email)
+      return dispatch('getCurrentUserFromFirestore')
+        .then((curUser) => {
+          if (curUser == null) {
+            router.push('/signup')
+          } else {
+            commit('updateCurrentUser', curUser)
+            router.push('/')
+          }
+        })
+        .catch((error) => console.log(error))
     },
     userSignUp ({
       dispatch,
@@ -97,51 +102,37 @@ export default {
           .then(() => commit('loginSucess', true))
           .then(() => dispatch('userInsert'))
           .then(() => router.push('/'))
-          .catch(() => {
-            commit('loggout')
-          })
+          .catch((error) => console.log(error))
       }
     },
-    userSignOut ({
-      commit
-    }) {
+    userSignOut () {
       return firebase
         .auth()
         .signOut()
-        .then(() => {
-          commit('loggout')
-          router.push('/login')
-        })
-        .catch(() => {
-          commit('loggout')
-          router.push('/login')
-        })
+        .catch((error) => console.log(error))
+    },
+    userSignOutSucess ({
+      commit
+    }) {
+      commit('loggout')
+      if (router.currentRoute.path !== '/login') {
+        router.push('/login')
+      }
     },
     userInsert ({
-      commit,
       state
     }) {
       return userColRef
         .doc(firebase.auth().currentUser.uid)
-        .set(state.currentUser).then(() => commit('updateUserRegistered', true))
-        .then(() => router.push('/'))
-        .catch((error) => {
-          console.log('Error getting document:', error)
-        })
+        .set(state.currentUser)
+        .catch((error) => console.log(error))
     },
-    updateCurrentUser ({
-      commit
-    }) {
-      var docRef = userColRef.doc(firebase.auth().currentUser.uid)
-      return docRef.get().then((doc) => {
-        if (doc.exists) {
-          commit('updateCurrentUser', doc.data())
-        } else {
-          router.push('/signup')
-        }
-      }).catch((error) => {
-        console.log('Error getting document:', error)
-      })
+    getCurrentUserFromFirestore () {
+      return userColRef
+        .doc(firebase.auth().currentUser.uid)
+        .get()
+        .then((doc) => doc.exists ? Promise.resolve(doc.data()) : Promise.resolve(null))
+        .catch((error) => console.log(error))
     }
 
   }
