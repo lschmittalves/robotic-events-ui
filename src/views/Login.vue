@@ -76,6 +76,7 @@ export default {
   }),
   methods: {
     googleLogin () {
+      this.$store.dispatch('user/userLoginWithGoogle')
     },
     submit () {
       if (this.$refs.sigupForm.validate()) {

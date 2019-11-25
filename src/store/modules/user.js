@@ -29,7 +29,7 @@ export default {
       return state.userIsRegistered
     },
     getUserName: state => {
-      return state.currentUser.fullName
+      return state.currentUser ? state.currentUser.fullName : ''
     }
   },
   mutations: {
@@ -75,20 +75,31 @@ export default {
           errorObj: error
         }))
     },
+    userLoginWithGoogle () {
+      var provider = new firebase.auth.GoogleAuthProvider()
+
+      return firebase
+        .auth()
+        .signInWithPopup(provider)
+        .catch((error) => this.dispatch('general/reportError', {
+          userMessage: messages[error.code],
+          errorObj: error
+        }))
+    },
     userLogInSucess ({
       dispatch,
       commit
-    }, {
-      email
-    }) {
+    }, email) {
       commit('loginSucess', email)
       return dispatch('getCurrentUserFromFirestore')
         .then((curUser) => {
-          if (curUser == null) {
+          if (curUser == null && router.currentRoute.path !== '/signup') {
             router.push('/signup')
           } else {
             commit('updateCurrentUser', curUser)
-            router.push('/')
+            if (router.currentRoute.path !== '/') {
+              router.push('/')
+            }
           }
         })
         .catch((error) => this.dispatch('general/reportError', {
@@ -106,6 +117,7 @@ export default {
     }) {
       if (state.userIsLogged) {
         return dispatch('userInsert')
+          .then(() => dispatch('userLogInSucess', email))
       } else {
         return firebase
           .auth()
