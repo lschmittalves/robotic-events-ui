@@ -14,7 +14,8 @@ export function initialState () {
       email: '',
       fullName: '',
       birthDate: '',
-      phone: ''
+      phone: '',
+      teamName: ''
     }
   }
 }
@@ -30,6 +31,9 @@ export default {
     },
     getUserName: state => {
       return state.currentUser ? state.currentUser.fullName : ''
+    },
+    getTeamName: state => {
+      return state.currentUser ? state.currentUser.teamName : ''
     }
   },
   mutations: {
@@ -44,7 +48,10 @@ export default {
       state.userIsLogged = true
     },
     updateCurrentUser: (state, payload) => {
-      state.currentUser = payload
+      state.currentUser = {
+        ...state.currentUser,
+        ...payload
+      }
       state.userIsRegistered = true
     },
     updateEmail: (state, payload) => {
@@ -103,7 +110,7 @@ export default {
             }
           }
         })
-        .then(() => this.dispatch('general/finishLoading'))
+        .finally(() => this.dispatch('general/finishLoading'))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],
           errorObj: error
@@ -152,7 +159,6 @@ export default {
       this.dispatch('general/finishLoading')
     },
     userInsert ({
-      dispatch,
       state
     }) {
       return userColRef
@@ -163,10 +169,7 @@ export default {
           errorObj: error
         }))
     },
-    getCurrentUserFromFirestore ({
-      dispatch
-    }) {
-      this.dispatch('general/startLoading')
+    getCurrentUserFromFirestore () {
       return userColRef
         .doc(firebase.auth().currentUser.uid)
         .get()
