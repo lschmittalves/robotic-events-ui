@@ -4,6 +4,7 @@ import firebase from 'firebase'
 // Plugins
 import vuetify from './plugins/vuetify'
 import './plugins/firebase'
+import './services/http'
 import {
   sync
 } from 'vuex-router-sync'

@@ -1,6 +1,7 @@
 export function initialState () {
   return {
-    currentErrorMessage: ''
+    currentErrorMessage: '',
+    isLoading: false
   }
 }
 
@@ -12,11 +13,17 @@ export default {
     },
     getErrorMessage: state => {
       return state.currentErrorMessage
+    },
+    isLoading: state => {
+      return state.isLoading
     }
   },
   mutations: {
     setErrorMessage: (state, payload) => {
       state.currentErrorMessage = payload
+    },
+    setLoading: (state, payload) => {
+      state.isLoading = payload
     }
   },
   actions: {
@@ -40,6 +47,16 @@ export default {
         console.error(errorObj)
       }
       dispatch('reportErrorMessage', userMessage)
+    },
+    startLoading ({
+      commit
+    }) {
+      commit('setLoading', true)
+    },
+    finishLoading ({
+      commit
+    }) {
+      commit('setLoading', false)
     }
   }
 }

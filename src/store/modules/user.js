@@ -67,6 +67,7 @@ export default {
       email,
       password
     }) {
+      this.dispatch('general/startLoading')
       return firebase
         .auth()
         .signInWithEmailAndPassword(email, password)
@@ -77,7 +78,7 @@ export default {
     },
     userLoginWithGoogle () {
       var provider = new firebase.auth.GoogleAuthProvider()
-
+      this.dispatch('general/startLoading')
       return firebase
         .auth()
         .signInWithPopup(provider)
@@ -102,6 +103,7 @@ export default {
             }
           }
         })
+        .then(() => this.dispatch('general/finishLoading'))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],
           errorObj: error
@@ -115,6 +117,7 @@ export default {
       email,
       password
     }) {
+      this.dispatch('general/startLoading')
       if (state.userIsLogged) {
         return dispatch('userInsert')
           .then(() => dispatch('userLogInSucess', email))
@@ -130,6 +133,7 @@ export default {
       }
     },
     userSignOut () {
+      this.dispatch('general/startLoading')
       return firebase
         .auth()
         .signOut()
@@ -145,6 +149,7 @@ export default {
       if (router.currentRoute.path !== '/login') {
         router.push('/login')
       }
+      this.dispatch('general/finishLoading')
     },
     userInsert ({
       dispatch,
@@ -161,6 +166,7 @@ export default {
     getCurrentUserFromFirestore ({
       dispatch
     }) {
+      this.dispatch('general/startLoading')
       return userColRef
         .doc(firebase.auth().currentUser.uid)
         .get()

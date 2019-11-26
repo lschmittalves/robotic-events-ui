@@ -2,6 +2,13 @@
   <div>
     <v-toolbar>
       <v-toolbar-title>Summit de Robotica{{ title }}</v-toolbar-title>
+      <v-progress-linear
+        :active="isLoading"
+        :indeterminate="isLoading"
+        absolute
+        bottom
+        color="deep-purple accent-4"
+      ></v-progress-linear>
       <v-spacer></v-spacer>
       <v-toolbar-items>
         <v-btn v-if="displayLinks" to="/" text>Dashboard</v-btn>
@@ -15,7 +22,8 @@
           </v-btn>
         </template>
         <v-list>
-          <v-list-item to="/user-profile">
+          <!-- <v-list-item to="/user-profile"> -->
+          <v-list-item>
             <v-list-item-title>{{userName}}</v-list-item-title>
           </v-list-item>
           <v-list-item @click="onSignOutClick">
@@ -61,6 +69,9 @@ export default {
     },
     userName: function () {
       return this.$store.getters['user/getUserName']
+    },
+    isLoading () {
+      return this.$store.getters['general/isLoading']
     }
   },
   methods: {
