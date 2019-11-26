@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-layout wrap>
-      Dashboard Works!
+      Events Works!
     </v-layout>
   </v-container>
 </template>

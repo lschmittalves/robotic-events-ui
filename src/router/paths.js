@@ -21,8 +21,16 @@ export default [{
 },
 {
   path: '',
-  // Relative to /src/views
-  view: 'Dashboard',
+  name: 'Eventos',
+  view: 'Events',
+  meta: {
+    authRequired: true
+  }
+},
+{
+  path: '/team',
+  name: 'Sua Equipe',
+  view: 'Team',
   meta: {
     authRequired: true
   }
