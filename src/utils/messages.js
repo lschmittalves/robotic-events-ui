@@ -6,5 +6,7 @@ export const messages = {
   'auth/invalid-email': 'Email fornecido para cadastro nao e valido',
   'auth/invalid-email-verified': 'Email de verificacao esta invalido',
   'auth/wrong-password': 'Senha Invalida! Use o link \'Esqueceu a Senha?\' para recuperar a senha',
-  'auth/user-disabled': 'Usuario esta desativado, contate o administrador do sistema'
+  'auth/user-disabled': 'Usuario esta desativado, contate o administrador do sistema',
+  'team/member-not-found': 'Usuario nao encontrado, verifique se ele esta cadastrado',
+  'team/member-has-team': 'Usuario esta em outra equipe, ele deve deixar a equipe atual para poder ser adicionado como membro de outra equipe'
 }

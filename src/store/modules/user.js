@@ -5,6 +5,7 @@ import {
 } from '../../utils/messages'
 
 const userColRef = firebase.firestore().collection('users')
+const teamsColRef = firebase.firestore().collection('teams')
 
 export function initialState () {
   return {
@@ -15,7 +16,9 @@ export function initialState () {
       fullName: '',
       birthDate: '',
       phone: '',
-      teamName: ''
+      team: {
+        name: ''
+      }
     }
   }
 }
@@ -33,7 +36,7 @@ export default {
       return state.currentUser ? state.currentUser.fullName : ''
     },
     getTeamName: state => {
-      return state.currentUser ? state.currentUser.teamName : ''
+      return state.currentUser && state.currentUser.team ? state.currentUser.team.name : ''
     }
   },
   mutations: {
@@ -65,6 +68,9 @@ export default {
     },
     updatePhone: (state, payload) => {
       state.currentUser.phone = payload
+    },
+    updateCurrentTeam: (state, payload) => {
+      state.currentUser.team = payload || initialState.currentUser.team
     }
   },
   actions: {
@@ -162,7 +168,7 @@ export default {
       state
     }) {
       return userColRef
-        .doc(firebase.auth().currentUser.uid)
+        .doc(firebase.auth().currentUser.email)
         .set(state.currentUser)
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],
@@ -171,13 +177,31 @@ export default {
     },
     getCurrentUserFromFirestore () {
       return userColRef
-        .doc(firebase.auth().currentUser.uid)
+        .doc(firebase.auth().currentUser.email)
         .get()
         .then((doc) => doc.exists ? Promise.resolve(doc.data()) : Promise.resolve(null))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],
           errorObj: error
         }))
+    },
+    leaveTeam ({
+      commit,
+      state
+    }) {
+      let updates = {}
+      updates[`/users/${state.currentUser.email}`] = {
+        team: {}
+      }
+      return this.dispatch('general/startLoading')
+        .then(() => firebase.database().ref().update(updates))
+        .then(() => teamsColRef.doc(state.currentTeam.teamName).collection('members').doc(state.currentUser.email).delete())
+        .then(() => commit('updateCurrentTeam', null))
+        .catch((error) => this.dispatch('general/reportError', {
+          userMessage: messages[error.code],
+          errorObj: error
+        }))
+        .finally(() => this.dispatch('general/finishLoading'))
     }
 
   }
