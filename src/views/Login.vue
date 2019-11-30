@@ -16,6 +16,7 @@
                     :rules="emailRules"
                     placeholder="Informe seu email"
                     required
+                    :disabled="isLoading"
                   ></v-text-field>
                   <v-text-field
                     prepend-icon="mdi-key"
@@ -28,6 +29,7 @@
                     :rules="pwdRules"
                     placeholder="Informe sua senha"
                     required
+                    :disabled="isLoading"
                   ></v-text-field>
                 </v-form>
                 <p class="text-right">
@@ -35,12 +37,20 @@
                 </p>
               </v-col>
               <v-col class="mt-n6" cols="12" md="10">
-                <v-btn :disabled="!valid" @click="submit" x-large block outlined>Entrar</v-btn>
+                <v-btn :disabled="!valid || isLoading" @click="submit" x-large block outlined>Entrar</v-btn>
               </v-col>
               <v-col class="mt-n2 pa-12" cols="12" md="10">
                 <p class="ma-2 text-center">Ou faca o login usando</p>
                 <v-row align="start" justify="center">
-                  <v-btn class="mx-2" fab dark color="yellow darken-2" depressed @click="googleLogin">
+                  <v-btn
+                    class="mx-2"
+                    fab
+                    dark
+                    color="yellow darken-2"
+                    depressed
+                    :disabled="isLoading"
+                    @click="googleLogin"
+                  >
                     <v-icon dark>mdi-google</v-icon>
                   </v-btn>
                 </v-row>
@@ -48,7 +58,7 @@
               <v-col cols="12" md="10">
                 <p class="ma-2 text-center">Ainda nao possui acesso?</p>
                 <v-row align="start" justify="center">
-                  <v-btn color="primary" text to="/signup">Registrar-se</v-btn>
+                  <v-btn color="primary" text to="/signup" :disabled="isLoading">Registrar-se</v-btn>
                 </v-row>
               </v-col>
             </v-row>
@@ -77,6 +87,9 @@ export default {
   methods: {
     googleLogin () {
       this.$store.dispatch('user/userLoginWithGoogle')
+    },
+    isLoading () {
+      return this.$store.getters['general/isLoading']
     },
     submit () {
       if (this.$refs.sigupForm.validate()) {

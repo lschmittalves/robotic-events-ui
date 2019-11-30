@@ -18,7 +18,7 @@
                     type="email"
                     :rules="emailRules"
                     required
-                    :disabled="userIsAuthenticated"
+                    :disabled="userIsAuthenticated || isLoading"
                   ></v-text-field>
                   <v-text-field
                     v-if="!userIsAuthenticated"
@@ -27,6 +27,7 @@
                     type="email"
                     :rules="emailConfirmationRules"
                     required
+                    :disabled="isLoading"
                   ></v-text-field>
                   <v-text-field
                     v-if="!userIsAuthenticated"
@@ -39,6 +40,7 @@
                     hint="Uma letra, numero e um caracter especial"
                     :rules="pwdRules"
                     required
+                    :disabled="isLoading"
                   ></v-text-field>
                   <v-text-field
                     v-if="!userIsAuthenticated"
@@ -50,6 +52,7 @@
                     v-model="passwordConfirmation"
                     :rules="pwdConfirmationRules"
                     required
+                    :disabled="isLoading"
                   ></v-text-field>
                   <v-text-field
                     label="Nome Completo"
@@ -57,6 +60,7 @@
                     type="text"
                     :rules="nameRules"
                     required
+                    :disabled="isLoading"
                   ></v-text-field>
                   <v-text-field
                     label="Telefone"
@@ -66,6 +70,7 @@
                     :rules="phoneRules"
                     hint="Somente numeros com o DDD"
                     required
+                    :disabled="isLoading"
                   ></v-text-field>
                   <v-menu
                     ref="birthDateMenu"
@@ -82,6 +87,7 @@
                         readonly
                         v-on="on"
                         :rules="birthDateRules"
+                        :disabled="isLoading"
                       ></v-text-field>
                     </template>
                     <v-date-picker
@@ -95,7 +101,7 @@
                 </v-form>
               </v-col>
               <v-col cols="12" md="10">
-                <v-btn :disabled="!valid" @click="submit" x-large block outlined>Registrar</v-btn>
+                <v-btn :disabled="!valid || isLoading" @click="submit" x-large block outlined>Registrar</v-btn>
                 <p class="ma-4 text-center">
                   <a class="router-link" href="/login">Voltar a pagina de login</a>
                 </p>
@@ -209,6 +215,9 @@ export default {
     },
     userIsAuthenticated: function () {
       return this.$store.getters['user/isAuthenticated']
+    },
+    isLoading () {
+      return this.$store.getters['general/isLoading']
     }
   },
   watch: {

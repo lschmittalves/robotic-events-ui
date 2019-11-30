@@ -17,25 +17,28 @@
                     v-model="name"
                     type="text"
                     :rules="nameRules"
-                    :disabled="currentUserHasATeam"
+                    :disabled="currentUserHasATeam || isLoading"
                   ></v-text-field>
                   <v-text-field
                     label="Estado da sua equipe"
                     v-model="province"
                     type="text"
                     :rules="provinceRules"
+                    :disabled="isLoading"
                   ></v-text-field>
                   <v-text-field
                     label="Cidade da sua equipe"
                     v-model="city"
                     type="text"
                     :rules="cityRules"
+                    :disabled="isLoading"
                   ></v-text-field>
                   <v-text-field
                     label="Organizacao Educacional"
                     v-model="collegeName"
                     type="text"
                     hint="Deixe em branco se sua equipe e particular"
+                    :disabled="isLoading"
                   ></v-text-field>
                   <v-text-field
                     v-if="currentUserHasATeam"
@@ -43,6 +46,7 @@
                     v-model="capitanUserEmail"
                     type="text"
                     :rules="capitanRules"
+                    :disabled="isLoading"
                   ></v-text-field>
                 </v-form>
               </v-col>
@@ -55,7 +59,7 @@
                   colored-border
                   icon="mdi-alert-circle-outline"
                 >Voce mudou o capitao, apos salvar as alteracoes voce nao tera mais acesso a edicao dessa equipe</v-alert>
-                <v-btn :disabled="!valid" @click="submit" x-large block outlined>Salvar Equipe</v-btn>
+                <v-btn :disabled="!valid || isLoading" @click="submit" x-large block outlined>Salvar Equipe</v-btn>
                 <p class="ma-4 text-center">
                   <a class="router-link" @click="cancel">Cancelar</a>
                 </p>
@@ -150,6 +154,9 @@ export default {
         this.$store.getters['user/getTeamCapitan'] !==
           this.$store.getters['user/getUserEmail']
       )
+    },
+    isLoading () {
+      return this.$store.getters['general/isLoading']
     }
   },
   methods: {
