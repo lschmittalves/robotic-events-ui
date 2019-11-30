@@ -30,7 +30,14 @@ export default [{
 {
   path: '/team',
   name: 'Sua Equipe',
-  view: 'Team',
+  view: 'team/Index',
+  meta: {
+    authRequired: true
+  }
+},
+{
+  path: '/team/edit',
+  view: 'team/Edit',
   meta: {
     authRequired: true
   }

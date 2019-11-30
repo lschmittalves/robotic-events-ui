@@ -35,8 +35,14 @@ export default {
     getUserName: state => {
       return state.currentUser ? state.currentUser.fullName : ''
     },
+    getUserEmail: state => {
+      return state.currentUser ? state.currentUser.email : ''
+    },
     getTeamName: state => {
       return state.currentUser && state.currentUser.team ? state.currentUser.team.name : ''
+    },
+    currentUserHasATeam: state => {
+      return state.currentUser && state.currentUser.team && state.currentUser.team.name !== ''
     }
   },
   mutations: {

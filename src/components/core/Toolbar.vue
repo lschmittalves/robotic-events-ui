@@ -7,7 +7,7 @@
         :indeterminate="isLoading"
         absolute
         bottom
-        color="deep-purple accent-4"
+        color="cyan"
       ></v-progress-linear>
       <v-spacer></v-spacer>
       <v-toolbar-items>

@@ -2,6 +2,7 @@ import firebase from 'firebase'
 import {
   messages
 } from '../../utils/messages'
+import axios from 'axios'
 
 const teamsColRef = firebase.firestore().collection('teams')
 const robotsColRef = firebase.firestore().collection('robots')
@@ -12,10 +13,12 @@ export function initialState () {
     currentTeam: {
       name: '',
       city: '',
-      stateRegion: '',
+      province: '',
       collegeName: '',
       capitanUserEmail: ''
     },
+    provinces: [],
+    provinceCities: [],
     memberUsers: [],
     robots: []
   }
@@ -27,11 +30,37 @@ export default {
     isCurrentUserCapitan: state => {
       return state.currentTeam.capitanUserEmail === firebase.auth().currentUser.email
     },
-    currentUserHasATeam: state => {
-      return (!!state.currentTeam && state.currentTeam.name) !== ''
-    },
     getCurrentTeam: state => {
       return state.currentTeam ? state.currentTeam : initialState().currentTeam
+    },
+    getSelectedProvinceId: state => {
+      let curProvince = state.provinces.find(province => province.description === state.currentTeam.province)
+      if (curProvince) {
+        return curProvince.ibgeId
+      }
+      return 0
+    },
+    getSelectedCityId: state => {
+      let curCity = state.provinceCities.find(city => city.description === state.currentTeam.city)
+      if (curCity) {
+        return curCity.ibgeId
+      }
+      return 0
+    },
+    getTeamName: state => {
+      return state.currentTeam ? state.currentTeam.name : ''
+    },
+    getTeamCity: state => {
+      return state.currentTeam ? state.currentTeam.city : ''
+    },
+    getTeamProvince: state => {
+      return state.currentTeam ? state.currentTeam.province : ''
+    },
+    getTeamCollege: state => {
+      return state.currentTeam ? state.currentTeam.collegeName : ''
+    },
+    getTeamCapitan: state => {
+      return state.currentTeam ? state.currentTeam.capitanUserEmail : ''
     }
   },
   mutations: {
@@ -41,20 +70,20 @@ export default {
         ...(payload || initialState().currentTeam)
       }
     },
-    updateName: (state, payload) => {
-      state.currentUser.email = payload
+    updateTeamName: (state, payload) => {
+      state.currentTeam.name = payload
     },
-    updateCity: (state, payload) => {
-      state.currentUser.fullName = payload
+    updateTeamCity: (state, payload) => {
+      state.currentTeam.city = payload
     },
-    updateStateRegion: (state, payload) => {
-      state.currentUser.birthDate = payload
+    updateTeamProvince: (state, payload) => {
+      state.currentTeam.province = payload
     },
     updateCollegeName: (state, payload) => {
-      state.currentUser.phone = payload
+      state.currentTeam.collegeName = payload
     },
     updateCapitanUserEmail: (state, payload) => {
-      state.currentUser.capitanUserEmail = payload
+      state.currentTeam.capitanUserEmail = payload
     },
     loadMembers: (state, payload) => {
       state.memberUsers = payload
@@ -73,6 +102,12 @@ export default {
     },
     removeRobot: (state, payload) => {
       state.robots.splice(state.robots.findIndex(robot => robot.name === payload.name), 1)
+    },
+    loadProvinces: (state, payload) => {
+      state.provinces = payload
+    },
+    loadProvinceCities: (state, payload) => {
+      state.provinceCities = payload
     }
   },
   actions: {
@@ -90,8 +125,14 @@ export default {
         .finally(() => this.dispatch('general/finishLoading'))
     },
     getCurrentTeamFromFirestore () {
+      let curUserTeamName = this.getters['user/getTeamName']
+
+      if (!curUserTeamName) {
+        return Promise.resolve(null)
+      }
+
       return teamsColRef
-        .doc(this.state.user.getters.getTeamName)
+        .doc(curUserTeamName)
         .get()
         .then((doc) => doc.exists ? Promise.resolve(doc.data()) : Promise.resolve(null))
         .catch((error) => this.dispatch('general/reportError', {
@@ -113,8 +154,14 @@ export default {
         .finally(() => this.dispatch('general/finishLoading'))
     },
     getTeamMembersFromFirestore () {
+      let curUserTeamName = this.getters['user/getTeamName']
+
+      if (!curUserTeamName) {
+        return Promise.resolve([])
+      }
+
       return teamsColRef
-        .doc(this.state.user.getters.getTeamName)
+        .doc(curUserTeamName)
         .collection('members')
         .get()
         .catch((error) => this.dispatch('general/reportError', {
@@ -136,8 +183,14 @@ export default {
         .finally(() => this.dispatch('general/finishLoading'))
     },
     getTeamRobotsFromFirestore () {
+      let curUserTeamName = this.getters['user/getTeamName']
+
+      if (!curUserTeamName) {
+        return Promise.resolve([])
+      }
+
       return teamsColRef
-        .doc(this.state.user.getters.getTeamName)
+        .doc(curUserTeamName)
         .collection('robots')
         .get()
         .catch((error) => this.dispatch('general/reportError', {
@@ -269,6 +322,41 @@ export default {
           errorObj: error
         }))
         .finally(() => this.dispatch('general/finishLoading'))
+    },
+    loadProvincesFromIBGE ({
+      commit
+    }) {
+      return axios
+        .get('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
+        .then(response => response.data.map(province => {
+          return {
+            ibgeId: province.id,
+            description: `${province.sigla} - ${province.nome}`
+          }
+        }))
+        .then((provinces) => commit('loadProvinces', provinces))
+        .catch((error) => this.dispatch('general/reportError', {
+          userMessage: 'Nao foi possivel carregar a lista de estados',
+          errorObj: error
+        }))
+    },
+    loadProviceCitiesFromIBGE ({
+      commit,
+      getters
+    }) {
+      return axios
+        .get(`http://servicodados.ibge.gov.br/api/v1/localidades/estados/${getters['getSelectedProvinceId']}/municipios`)
+        .then(response => response.data.map(city => {
+          return {
+            ibgeId: city.id,
+            description: `${city.sigla} - ${city.nome}`
+          }
+        }))
+        .then((cities) => commit('loadProvincesCities', cities))
+        .catch((error) => this.dispatch('general/reportError', {
+          userMessage: 'Nao foi possivel carregar a lista de cidades',
+          errorObj: error
+        }))
     }
 
   }
