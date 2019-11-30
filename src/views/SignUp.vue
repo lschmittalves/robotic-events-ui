@@ -101,7 +101,13 @@
                 </v-form>
               </v-col>
               <v-col cols="12" md="10">
-                <v-btn :disabled="!valid || isLoading" @click="submit" x-large block outlined>Registrar</v-btn>
+                <v-btn
+                  :disabled="!valid || isLoading"
+                  @click="submit"
+                  x-large
+                  block
+                  outlined
+                >Registrar</v-btn>
                 <p class="ma-4 text-center">
                   <a class="router-link" href="/login">Voltar a pagina de login</a>
                 </p>
@@ -209,9 +215,7 @@ export default {
       return rules
     },
     birthDateRegionFormat () {
-      return this.birthDate
-        ? moment(this.birthDate).format('DD/MM/YYYY')
-        : ''
+      return this.birthDate ? moment(this.birthDate).format('DD/MM/YYYY') : ''
     },
     userIsAuthenticated: function () {
       return this.$store.getters['user/isAuthenticated']

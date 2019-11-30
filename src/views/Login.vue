@@ -84,12 +84,14 @@ export default {
     ],
     pwdRules: [v => !!v || 'Informe a senha para acessar sua conta']
   }),
+  computed: {
+    isLoading () {
+      return this.$store.getters['general/isLoading']
+    }
+  },
   methods: {
     googleLogin () {
       this.$store.dispatch('user/userLoginWithGoogle')
-    },
-    isLoading () {
-      return this.$store.getters['general/isLoading']
     },
     submit () {
       if (this.$refs.sigupForm.validate()) {

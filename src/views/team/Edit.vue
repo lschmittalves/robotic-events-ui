@@ -86,7 +86,7 @@ export default {
   mounted () {
     this.$store.dispatch('team/loadCurrentTeamFromFirestore').then(() => {
       this.isLoadingTeam = false
-    })
+    }).then(() => this.$store.dispatch('team/loadProvincesFromIBGE'))
   },
   computed: {
     name: {

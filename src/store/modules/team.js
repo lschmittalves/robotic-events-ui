@@ -326,8 +326,8 @@ export default {
     loadProvincesFromIBGE ({
       commit
     }) {
-      return axios
-        .get('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
+      return this.dispatch('general/startLoading')
+        .then(() => axios.get('https://servicodados.ibge.gov.br/api/v1/localidades/estados'))
         .then(response => response.data.map(province => {
           return {
             ibgeId: province.id,
@@ -339,13 +339,14 @@ export default {
           userMessage: 'Nao foi possivel carregar a lista de estados',
           errorObj: error
         }))
+        .finally(() => this.dispatch('general/finishLoading'))
     },
     loadProviceCitiesFromIBGE ({
       commit,
       getters
     }) {
-      return axios
-        .get(`http://servicodados.ibge.gov.br/api/v1/localidades/estados/${getters['getSelectedProvinceId']}/municipios`)
+      return this.dispatch('general/startLoading')
+        .then(() => axios.get(`http://servicodados.ibge.gov.br/api/v1/localidades/estados/${getters['getSelectedProvinceId']}/municipios`))
         .then(response => response.data.map(city => {
           return {
             ibgeId: city.id,
@@ -357,6 +358,7 @@ export default {
           userMessage: 'Nao foi possivel carregar a lista de cidades',
           errorObj: error
         }))
+        .finally(() => this.dispatch('general/finishLoading'))
     }
 
   }
