@@ -213,13 +213,11 @@ export default {
         }))
     },
     teamAddUpdate ({
-      state
+      state,
+      commit
     }) {
       let teamToUpdate = {
         ...state.currentTeam
-      }
-      let userToUpdate = {
-        team: teamToUpdate
       }
 
       // check the capitan user before send the update to the firebase
@@ -240,24 +238,52 @@ export default {
         })
       }
 
+      // delete recursive property
       delete teamToUpdate.capitanUser.team
 
+      // create batchtask
       let batchUpdate = dbRef.batch()
-      batchUpdate.set(teamsColRef.doc(teamToUpdate.name), teamToUpdate)
-      batchUpdate.update(userColRef.doc(teamToUpdate.capitanUser.email), userToUpdate)
 
-      state.memberUsers.forEach(member => {
-        if (member.email !== teamToUpdate.capitanUser.email) {
-          batchUpdate.update(userColRef.doc(member.email), { ...userToUpdate })
+      // update team
+      batchUpdate.set(teamsColRef.doc(teamToUpdate.name), teamToUpdate)
+
+      // update current member capitan
+      batchUpdate.set(teamsColRef.doc(teamToUpdate.name).collection('members').set(teamToUpdate.capitanUser.email), teamToUpdate.capitanUser)
+      // update the capitan user
+      batchUpdate.update(userColRef.doc(teamToUpdate.capitanUser.email), {
+        team: {
+          ...teamToUpdate
         }
       })
 
+      // now for each member that is not the capitan we need to update the team object
+      state.memberUsers.forEach(member => {
+        if (member.email !== teamToUpdate.capitanUser.email) {
+          batchUpdate.update(userColRef.doc(member.email), {
+            team: {
+              ...teamToUpdate
+            }
+          })
+        }
+      })
+
+      // now for each robot we need to update the team information
       state.robots.forEach(robot => {
-        batchUpdate.update(robotsColRef.doc(robot.name), { team: { ...teamToUpdate } })
+        batchUpdate.update(robotsColRef.doc(robot.name), {
+          team: {
+            ...teamToUpdate
+          }
+        })
       })
 
       return this.dispatch('general/startLoading')
         .then(() => batchUpdate.commit())
+        .then(() => {
+          // check if the current capitan is on the state memebers collection, if is not we need to commit the mutation to add
+          if (!state.members.find(a => a.email === teamToUpdate.capitanUser.email)) {
+            commit('addMember', teamToUpdate.capitanUser)
+          }
+        })
         .then(() => router.push('/team'))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],
@@ -274,7 +300,9 @@ export default {
       let teamToUpdate = {
         ...state.currentTeam
       }
-      let memberToUpdate = { ...memberUser }
+      let memberToUpdate = {
+        ...memberUser
+      }
       memberToUpdate.team = teamToUpdate
 
       let userToUpdate = {
@@ -335,7 +363,9 @@ export default {
       state
     }, robot) {
       // refresh robot team information
-      let robotToUpdate = { ...robot }
+      let robotToUpdate = {
+        ...robot
+      }
       robotToUpdate['team'] = {
         ...state.currentTeam
       }
