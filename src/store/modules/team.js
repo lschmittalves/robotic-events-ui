@@ -1,12 +1,15 @@
 import firebase from 'firebase'
+import router from '@/router'
+
 import {
   messages
 } from '../../utils/messages'
 import axios from 'axios'
 
-const teamsColRef = firebase.firestore().collection('teams')
-const robotsColRef = firebase.firestore().collection('robots')
-const userColRef = firebase.firestore().collection('users')
+const dbRef = firebase.firestore()
+const teamsColRef = dbRef.collection('teams')
+const robotsColRef = dbRef.collection('robots')
+const userColRef = dbRef.collection('users')
 
 export function initialState () {
   return {
@@ -15,7 +18,9 @@ export function initialState () {
       city: '',
       province: '',
       collegeName: '',
-      capitanUserEmail: ''
+      capitanUser: {
+        email: ''
+      }
     },
     provinces: [],
     provinceCities: [],
@@ -28,7 +33,7 @@ export default {
   state: initialState(),
   getters: {
     isCurrentUserCapitan: state => {
-      return state.currentTeam.capitanUserEmail === firebase.auth().currentUser.email
+      return state.currentTeam.capitanUser ? state.currentTeam.capitanUser.email === firebase.auth().currentUser.email : false
     },
     getCurrentTeam: state => {
       return state.currentTeam ? state.currentTeam : initialState().currentTeam
@@ -60,7 +65,16 @@ export default {
       return state.currentTeam ? state.currentTeam.collegeName : ''
     },
     getTeamCapitan: state => {
-      return state.currentTeam ? state.currentTeam.capitanUserEmail : ''
+      return state.currentTeam && state.currentTeam.capitanUser ? state.currentTeam.capitanUser.email : ''
+    },
+    getProvincesDescriptions: state => {
+      return state.provinces ? state.provinces.map((a) => a.description) : []
+    },
+    getCitiesDescriptions: state => {
+      return state.provinceCities ? state.provinceCities.map((a) => a.description) : []
+    },
+    getMembersDescriptions: state => {
+      return state.memberUsers ? state.memberUsers.map((a) => a.email) : []
     }
   },
   mutations: {
@@ -83,7 +97,7 @@ export default {
       state.currentTeam.collegeName = payload
     },
     updateCapitanUserEmail: (state, payload) => {
-      state.currentTeam.capitanUserEmail = payload
+      state.currentTeam.capitanUser['email'] = payload
     },
     loadMembers: (state, payload) => {
       state.memberUsers = payload
@@ -201,32 +215,50 @@ export default {
     teamAddUpdate ({
       state
     }) {
-      let updates = {}
-      updates[`/teams/${state.currentTeam.teamName}`] = state.currentTeam
-      updates[`/users/${firebase.auth().currentUser.uid}`] = {
-        teamName: state.currentTeam.teamName
+      let teamToUpdate = {
+        ...state.currentTeam
+      }
+      let userToUpdate = {
+        team: teamToUpdate
       }
 
-      return this.dispatch('general/startLoading')
-        .then(() => firebase.database().ref().update(updates))
-        .catch((error) => this.dispatch('general/reportError', {
-          userMessage: messages[error.code],
-          errorObj: error
-        }))
-        .finally(() => this.dispatch('general/finishLoading'))
-    },
-    changeCapitanMember ({
-      commit,
-      state
-    }, newCapitanEmail) {
-      let updates = {}
-      updates[`/teams/${state.currentTeam.teamName}`] = {
-        capitanUserEmail: newCapitanEmail
+      // check the capitan user before send the update to the firebase
+      if (!teamToUpdate.capitanUser || !teamToUpdate.capitanUser.email) {
+        teamToUpdate.capitanUser = {
+          ...this.getters['user/getCurrentUser']
+        }
+      } else {
+        teamToUpdate.capitanUser = {
+          ...state.memberUsers.find(user => user.email === state.currentTeam.capitanUser.email)
+        }
       }
 
+      // failsafe, if we dont find a valid user as capitain
+      if (!teamToUpdate.capitanUser || !teamToUpdate.capitanUser.email) {
+        return this.dispatch('general/reportError', {
+          userMessage: 'Capitao nao encontrado!'
+        })
+      }
+
+      delete teamToUpdate.capitanUser.team
+
+      let batchUpdate = dbRef.batch()
+      batchUpdate.set(teamsColRef.doc(teamToUpdate.name), teamToUpdate)
+      batchUpdate.update(userColRef.doc(teamToUpdate.capitanUser.email), userToUpdate)
+
+      state.memberUsers.forEach(member => {
+        if (member.email !== teamToUpdate.capitanUser.email) {
+          batchUpdate.update(userColRef.doc(member.email), { ...userToUpdate })
+        }
+      })
+
+      state.robots.forEach(robot => {
+        batchUpdate.update(robotsColRef.doc(robot.name), { team: { ...teamToUpdate } })
+      })
+
       return this.dispatch('general/startLoading')
-        .then(() => firebase.database().ref().update(updates))
-        .then(() => commit('updateCapitanUserEmail', newCapitanEmail))
+        .then(() => batchUpdate.commit())
+        .then(() => router.push('/team'))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],
           errorObj: error
@@ -239,14 +271,22 @@ export default {
       dispatch
     },
     memberUser) {
-      let updates = {}
-      updates[`/teams/${state.currentTeam.teamName}/members/${memberUser.email}`] = memberUser
-      updates[`/users/${memberUser.email}`] = {
-        team: state.currentTeam
+      let teamToUpdate = {
+        ...state.currentTeam
       }
+      let memberToUpdate = { ...memberUser }
+      memberToUpdate.team = teamToUpdate
+
+      let userToUpdate = {
+        team: teamToUpdate
+      }
+
+      delete teamToUpdate.capitanUser.team
+
       return this.dispatch('general/startLoading')
         .then(() => dispatch('checkIfNewMemberIfValid', memberUser))
-        .then(() => firebase.database().ref().update(updates))
+        .then(() => teamsColRef.doc(memberToUpdate.team.name).collection('members').doc(memberToUpdate.email).set(memberToUpdate))
+        .then(() => userColRef.doc(memberToUpdate.email).update(userToUpdate))
         .then(() => commit('addMember', memberUser))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],
@@ -282,7 +322,7 @@ export default {
       state
     }, memberUser) {
       return this.dispatch('general/startLoading')
-        .then(() => teamsColRef.doc(state.currentTeam.teamName).collection('members').doc(memberUser.email).delete())
+        .then(() => teamsColRef.doc(state.currentTeam.name).collection('members').doc(memberUser.email).delete())
         .then(() => commit('removeMember', memberUser))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],
@@ -295,13 +335,16 @@ export default {
       state
     }, robot) {
       // refresh robot team information
-      robot['team'] = state.currentTeam
-      let updates = {}
-      updates[`/teams/${state.currentTeam.teamName}/robots/${robot.name}`] = robot
-      updates[`/robots/${robot.name}`] = robot
+      let robotToUpdate = { ...robot }
+      robotToUpdate['team'] = {
+        ...state.currentTeam
+      }
+
+      delete robotToUpdate.team.capitanUser.team
 
       return this.dispatch('general/startLoading')
-        .then(() => firebase.database().ref().update(updates))
+        .then(() => teamsColRef.doc(robotToUpdate.team.name).collection('robots').doc(robotToUpdate.name).set(robotToUpdate))
+        .then(() => robotsColRef.doc(robotToUpdate.name).set(robotToUpdate))
         .then(() => commit('addRobot', robot))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],
@@ -314,7 +357,7 @@ export default {
       state
     }, robot) {
       return this.dispatch('general/startLoading')
-        .then(() => teamsColRef.doc(state.currentTeam.teamName).collection('robots').doc(robot.name).delete())
+        .then(() => teamsColRef.doc(state.currentTeam.name).collection('robots').doc(robot.name).delete())
         .then(() => robotsColRef.doc(robot.name).doc(robot.name).delete())
         .then(() => commit('removeRobot', robot))
         .catch((error) => this.dispatch('general/reportError', {
@@ -333,6 +376,17 @@ export default {
             ibgeId: province.id,
             description: `${province.sigla} - ${province.nome}`
           }
+        }).sort((a, b) => {
+          const descA = a.description.toUpperCase()
+          const descB = b.description.toUpperCase()
+
+          let comparison = 0
+          if (descA > descB) {
+            comparison = 1
+          } else if (descA < descB) {
+            comparison = -1
+          }
+          return comparison
         }))
         .then((provinces) => commit('loadProvinces', provinces))
         .catch((error) => this.dispatch('general/reportError', {
@@ -350,10 +404,21 @@ export default {
         .then(response => response.data.map(city => {
           return {
             ibgeId: city.id,
-            description: `${city.sigla} - ${city.nome}`
+            description: `${city.nome}`
           }
+        }).sort((a, b) => {
+          const descA = a.description.toUpperCase()
+          const descB = b.description.toUpperCase()
+
+          let comparison = 0
+          if (descA > descB) {
+            comparison = 1
+          } else if (descA < descB) {
+            comparison = -1
+          }
+          return comparison
         }))
-        .then((cities) => commit('loadProvincesCities', cities))
+        .then((cities) => commit('loadProvinceCities', cities))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: 'Nao foi possivel carregar a lista de cidades',
           errorObj: error

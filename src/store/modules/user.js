@@ -32,6 +32,9 @@ export default {
     userRegisterIsCompleted: state => {
       return state.userIsRegistered
     },
+    getCurrentUser: state => {
+      return state.currentUser
+    },
     getUserName: state => {
       return state.currentUser ? state.currentUser.fullName : ''
     },
@@ -201,7 +204,7 @@ export default {
       }
       return this.dispatch('general/startLoading')
         .then(() => firebase.database().ref().update(updates))
-        .then(() => teamsColRef.doc(state.currentTeam.teamName).collection('members').doc(state.currentUser.email).delete())
+        .then(() => teamsColRef.doc(state.currentTeam.name).collection('members').doc(state.currentUser.email).delete())
         .then(() => commit('updateCurrentTeam', null))
         .catch((error) => this.dispatch('general/reportError', {
           userMessage: messages[error.code],

@@ -19,20 +19,21 @@
                     :rules="nameRules"
                     :disabled="currentUserHasATeam || isLoading"
                   ></v-text-field>
-                  <v-text-field
-                    label="Estado da sua equipe"
+                  <v-select
                     v-model="province"
-                    type="text"
+                    :items="provinces"
                     :rules="provinceRules"
+                    label="Selecione o estado da sua equipe"
                     :disabled="isLoading"
-                  ></v-text-field>
-                  <v-text-field
-                    label="Cidade da sua equipe"
+                    @change="onProvinceSelectChange"
+                  ></v-select>
+                  <v-select
+                    label="Selecione a Cidade da sua equipe"
                     v-model="city"
-                    type="text"
+                    :items="cities"
                     :rules="cityRules"
                     :disabled="isLoading"
-                  ></v-text-field>
+                  ></v-select>
                   <v-text-field
                     label="Organizacao Educacional"
                     v-model="collegeName"
@@ -40,14 +41,14 @@
                     hint="Deixe em branco se sua equipe e particular"
                     :disabled="isLoading"
                   ></v-text-field>
-                  <v-text-field
+                  <v-select
                     v-if="currentUserHasATeam"
+                    :items="members"
                     label="Atual Capitao"
                     v-model="capitanUserEmail"
-                    type="text"
                     :rules="capitanRules"
-                    :disabled="isLoading"
-                  ></v-text-field>
+                    :disabled="isLoading || disableCapitanSelection"
+                  ></v-select>
                 </v-form>
               </v-col>
               <v-col cols="12" md="10">
@@ -59,7 +60,13 @@
                   colored-border
                   icon="mdi-alert-circle-outline"
                 >Voce mudou o capitao, apos salvar as alteracoes voce nao tera mais acesso a edicao dessa equipe</v-alert>
-                <v-btn :disabled="!valid || isLoading" @click="submit" x-large block outlined>Salvar Equipe</v-btn>
+                <v-btn
+                  :disabled="!valid || isLoading"
+                  @click="submit"
+                  x-large
+                  block
+                  outlined
+                >Salvar Equipe</v-btn>
                 <p class="ma-4 text-center">
                   <a class="router-link" @click="cancel">Cancelar</a>
                 </p>
@@ -84,9 +91,16 @@ export default {
     cityRules: [v => !!v || 'Informe a cidade da sua equipe']
   }),
   mounted () {
-    this.$store.dispatch('team/loadCurrentTeamFromFirestore').then(() => {
-      this.isLoadingTeam = false
-    }).then(() => this.$store.dispatch('team/loadProvincesFromIBGE'))
+    this.$store
+      .dispatch('team/loadCurrentTeamFromFirestore')
+      .then(() => {
+        this.isLoadingTeam = false
+      })
+      .then(() => this.$store.dispatch('team/loadProvincesFromIBGE'))
+
+    if (this.$store.getters['user/currentUserHasATeam']) {
+      this.$store.dispatch('team/loadTeamMembersFromFirestore')
+    }
   },
   computed: {
     name: {
@@ -129,6 +143,26 @@ export default {
         this.$store.commit('team/updateCapitanUserEmail', value)
       }
     },
+    provinces: {
+      get () {
+        return this.$store.getters['team/getProvincesDescriptions']
+      }
+    },
+    cities: {
+      get () {
+        return this.$store.getters['team/getCitiesDescriptions']
+      }
+    },
+    members: {
+      get () {
+        return this.$store.getters['team/getMembersDescriptions']
+      }
+    },
+    disableCapitanSelection: {
+      get () {
+        return this.members.length < 2
+      }
+    },
     capitanRules: function () {
       const rules = []
       const rule1 = v =>
@@ -165,8 +199,12 @@ export default {
         router.push('/team')
       })
     },
+    onProvinceSelectChange () {
+      this.$store.dispatch('team/loadProviceCitiesFromIBGE')
+    },
     submit () {
       if (this.$refs.teamForm.validate()) {
+        this.$store.dispatch('team/teamAddUpdate')
       }
     }
   }
